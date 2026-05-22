@@ -77,7 +77,11 @@
 
 /* Base resets */
 *, *::before, *::after { box-sizing: border-box; }
-html, body, #root { height: 100%; overflow: hidden; }
+html, body, #root { height: 100%; }
+/* Desktop only: lock viewport so the app never scrolls */
+@media (min-width: 1024px) {
+  body, #root { overflow: hidden; }
+}
 body {
   margin: 0;
   background: hsl(0 0% 98%);

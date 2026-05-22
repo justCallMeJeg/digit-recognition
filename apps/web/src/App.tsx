@@ -74,43 +74,55 @@ export default function App() {
   };
 
   return (
-    <div className="h-full w-full flex flex-col overflow-hidden">
+    <div className="min-h-full w-full flex flex-col lg:h-full lg:overflow-hidden">
+
       {/* Header */}
       <header className="border-b border-border bg-white/70 backdrop-blur-sm shrink-0">
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-md bg-primary text-primary-foreground grid place-items-center font-mono text-xs font-semibold">
-              28
-            </div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <img
+              src="/favicon.png"
+              alt="Digit Recognizer"
+              className="w-7 h-7 rounded-md object-contain"
+            />
             <div className="flex flex-col leading-tight">
               <span className="text-sm font-semibold">Digit Recognizer</span>
-              <span className="text-[11px] text-muted-foreground">MNIST · Dense inference</span>
+              <span className="hidden sm:block text-[11px] text-muted-foreground">MNIST · Dense inference</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="gap-1.5">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Badge variant="outline" className="gap-1.5 text-xs">
               <span className={cn(
-                'w-1.5 h-1.5 rounded-full',
+                'w-1.5 h-1.5 rounded-full shrink-0',
                 health.status === 'loading' && 'bg-muted-foreground/50 animate-pulse',
                 health.status === 'online'  && 'bg-emerald-500',
                 health.status === 'offline' && 'bg-red-500',
               )} />
-              {health.status === 'loading' && 'checking…'}
-              {health.status === 'online'  && 'model online'}
-              {health.status === 'offline' && 'model offline'}
+              <span className="hidden sm:inline">
+                {health.status === 'loading' && 'checking…'}
+                {health.status === 'online'  && 'model online'}
+                {health.status === 'offline' && 'model offline'}
+              </span>
+              <span className="sm:hidden">
+                {health.status === 'loading' && 'checking'}
+                {health.status === 'online'  && 'online'}
+                {health.status === 'offline' && 'offline'}
+              </span>
             </Badge>
-            <Badge variant="outline" className="font-mono">
+            <Badge variant="outline" className="font-mono text-xs">
               {health.version ? `v${health.version}` : '—'}
             </Badge>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 min-h-0 w-full max-w-6xl mx-auto px-6 py-6 flex flex-col">
-        <div className="shrink-0 mb-4 flex items-end justify-between gap-6">
+      <main className="flex-1 min-h-0 w-full max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex flex-col gap-4 sm:gap-6">
+
+        {/* Page heading */}
+        <div className="shrink-0 flex items-end justify-between gap-4">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight">Draw a digit</h1>
-            <p className="text-xs text-muted-foreground mt-1 max-w-xl">
+            <h1 className="text-lg sm:text-xl font-semibold tracking-tight">Draw a digit</h1>
+            <p className="hidden sm:block text-xs text-muted-foreground mt-1 max-w-xl">
               Sketch any digit from 0–9. Press{' '}
               <kbd className="font-mono text-[10px] bg-muted border border-border rounded px-1.5 py-0.5">
                 Predict
@@ -123,67 +135,33 @@ export default function App() {
           </div>
         </div>
 
+        {/* Desktop: animated two-panel grid */}
         <div
           className={cn(
-            'flex-1 min-h-0 grid gap-6 transition-[grid-template-columns] duration-500 ease-out',
+            'hidden lg:grid flex-1 min-h-0 gap-6',
+            'transition-[grid-template-columns] duration-500 ease-out',
             revealed
-              ? 'grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]'
-              : 'grid-cols-1 lg:grid-cols-[minmax(0,1fr)_0fr]',
+              ? 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)]'
+              : 'grid-cols-[minmax(0,1fr)_0fr]',
           )}
         >
-          {/* Left: canvas */}
-          <Card className="p-5 flex flex-col gap-4 min-h-0 overflow-hidden border-border">
-            <CardContent className="p-0 flex flex-col gap-4 flex-1 min-h-0">
-              <div className="flex items-start justify-between shrink-0">
-                <div>
-                  <h2 className="text-sm font-semibold">Canvas</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">Drawing area · 28×28 model input</p>
-                </div>
-                <Badge variant="outline" className="font-mono text-xs">
-                  {hasInk ? 'ink detected' : 'empty'}
-                </Badge>
-              </div>
-
-              <div ref={canvasContainerRef} className="canvas-area flex-1 flex items-center justify-center">
-                <div className="canvas-fit">
-                  <DrawingCanvas
-                    brush={brush}
-                    isDrawing={isDrawing}
-                    setIsDrawing={setIsDrawing}
-                    onChange={onCanvasChange}
-                    clearKey={clearKey}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 pt-3 border-t border-border shrink-0">
-                <Button
-                  variant="outline"
-                  onClick={handleClear}
-                  disabled={!hasInk && !result && !busy}
-                  className="flex-1"
-                >
-                  <EraserIcon />
-                  Clear
-                </Button>
-                <Button
-                  onClick={handlePredict}
-                  disabled={!hasInk || busy}
-                  className="flex-1"
-                >
-                  {busy ? <><SpinnerIcon />Predicting…</> : <><SparkleIcon />Predict</>}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Right: results */}
-          <div
-            className={cn(
-              'overflow-hidden transition-all duration-500 min-h-0',
-              revealed ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0 pointer-events-none',
-            )}
-          >
+          <CanvasCard
+            canvasContainerRef={canvasContainerRef}
+            brush={brush}
+            isDrawing={isDrawing}
+            setIsDrawing={setIsDrawing}
+            onCanvasChange={onCanvasChange}
+            clearKey={clearKey}
+            hasInk={hasInk}
+            busy={busy}
+            result={result}
+            onClear={handleClear}
+            onPredict={handlePredict}
+          />
+          <div className={cn(
+            'overflow-hidden transition-all duration-500 min-h-0',
+            revealed ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0 pointer-events-none',
+          )}>
             {revealed && (
               <Card className="p-5 animate-slide-in-right h-full overflow-y-auto border-border">
                 <CardContent className="p-0">
@@ -193,8 +171,114 @@ export default function App() {
             )}
           </div>
         </div>
+
+        {/* Mobile: single column stack */}
+        <div className="flex lg:hidden flex-col gap-4">
+          <CanvasCard
+            canvasContainerRef={canvasContainerRef}
+            brush={brush}
+            isDrawing={isDrawing}
+            setIsDrawing={setIsDrawing}
+            onCanvasChange={onCanvasChange}
+            clearKey={clearKey}
+            hasInk={hasInk}
+            busy={busy}
+            result={result}
+            onClear={handleClear}
+            onPredict={handlePredict}
+            mobile
+          />
+          {revealed && (
+            <Card className="p-4 sm:p-5 border-border animate-fade-in-up overflow-y-auto">
+              <CardContent className="p-0">
+                <ResultsPanel result={result} busy={busy} />
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
       </main>
     </div>
+  );
+}
+
+/* ---------- Canvas card (shared between mobile and desktop) ---------- */
+
+interface CanvasCardProps {
+  canvasContainerRef: React.RefObject<HTMLDivElement>;
+  brush: number;
+  isDrawing: boolean;
+  setIsDrawing: (v: boolean) => void;
+  onCanvasChange: (s: { hasInk: boolean }) => void;
+  clearKey: number;
+  hasInk: boolean;
+  busy: boolean;
+  result: PredictionResult | null;
+  onClear: () => void;
+  onPredict: () => void;
+  mobile?: boolean;
+}
+
+function CanvasCard({
+  canvasContainerRef, brush, isDrawing, setIsDrawing,
+  onCanvasChange, clearKey, hasInk, busy, result, onClear, onPredict, mobile,
+}: CanvasCardProps) {
+  return (
+    <Card className={cn(
+      'p-4 sm:p-5 flex flex-col gap-4 overflow-hidden border-border',
+      mobile ? 'min-h-0' : 'min-h-0 h-full',
+    )}>
+      <CardContent className="p-0 flex flex-col gap-4 flex-1 min-h-0">
+        <div className="flex items-start justify-between shrink-0">
+          <div>
+            <h2 className="text-sm font-semibold">Canvas</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Drawing area · 28×28 model input</p>
+          </div>
+          <Badge variant="outline" className="font-mono text-xs">
+            {hasInk ? 'ink detected' : 'empty'}
+          </Badge>
+        </div>
+
+        <div
+          ref={canvasContainerRef}
+          className={cn(
+            'canvas-area flex items-center justify-center',
+            mobile
+              ? 'h-[min(72vw,360px)]'
+              : 'flex-1 min-h-0',
+          )}
+        >
+          <div className="canvas-fit">
+            <DrawingCanvas
+              brush={brush}
+              isDrawing={isDrawing}
+              setIsDrawing={setIsDrawing}
+              onChange={onCanvasChange}
+              clearKey={clearKey}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 pt-3 border-t border-border shrink-0">
+          <Button
+            variant="outline"
+            onClick={onClear}
+            disabled={!hasInk && !result && !busy}
+            className="flex-1"
+          >
+            <EraserIcon />
+            Clear
+          </Button>
+          <Button
+            onClick={onPredict}
+            disabled={!hasInk || busy}
+            className="flex-1"
+          >
+            {busy ? <><SpinnerIcon />Predicting…</> : <><SparkleIcon />Predict</>}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

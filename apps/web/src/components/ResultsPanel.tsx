@@ -88,8 +88,8 @@ export function ResultsPanel({ result, busy }: ResultsPanelProps) {
       </div>
 
       {/* Hero digit */}
-      <div className="relative rounded-xl border border-border bg-gradient-to-b from-white to-muted/40 p-6 flex items-center gap-6 overflow-hidden">
-        <div className="font-mono text-[120px] leading-none font-semibold text-foreground tracking-tighter">
+      <div className="relative rounded-xl border border-border bg-gradient-to-b from-white to-muted/40 p-4 sm:p-6 flex items-center gap-4 sm:gap-6 overflow-hidden">
+        <div className="font-mono text-[80px] sm:text-[120px] leading-none font-semibold text-foreground tracking-tighter">
           {top.d}
         </div>
         <div className="flex-1 flex flex-col gap-2">

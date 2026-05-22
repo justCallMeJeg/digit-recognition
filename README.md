@@ -2,6 +2,8 @@
 
 A full-stack handwritten digit recognition app built on a Keras MNIST model. Draw a digit in the browser and the model classifies it in real time, returning a ranked probability list for all 10 classes.
 
+**Live demo:** https://digitrecognitionict120.up.railway.app
+
 ---
 
 ## Features
@@ -168,41 +170,4 @@ python convert_model.py
 ```
 
 ---
-
-## Pre-Publish Checklist
-
-### Security
-- [X] `apps/web/.env` is **not** committed (confirmed in `.gitignore`)
-- [X] No hardcoded secrets or credentials in source files
-- [ ] Set `ALLOWED_ORIGIN` env var on Railway after first deploy to lock CORS
-- [x] Rate limiting added to `/predict/*` endpoints (`express-rate-limit`, 60 req/min)
-- [x] `console.log` gated behind `NODE_ENV !== 'production'`
-
-### Code Quality
-- [X] TypeScript compiles clean: `cd apps/web && npx tsc --noEmit`
-- [X] No ESLint warnings: `cd apps/web && npx eslint src`
-- [X] Delete unused `apps/web/src/components/BrushSlider.tsx`
-- [X] Delete unused `apps/web/src/App.css` if empty
-
-### Build & Runtime
-- [X] Production build succeeds: `npm run build`
-- [x] `apps/web/dist/` added to `.gitignore`
-- [X] `npm run prod` starts cleanly and `/health` returns `{ modelLoaded: true }`
-- [X] Model files (`apps/backend/model/model.json`, `*.bin`) are committed
-
-### Frontend Polish
-- [x] Favicon set (`apps/web/public/favicon.png`)
-- [x] Page `<title>` set to `"Digit Recognizer"`
-- [ ] Test on a mobile/touch device — pointer events and canvas sizing
-- [ ] Test on Firefox and Safari in addition to Chrome
-
-### Deployment
-- [x] `VITE_API_URL` falls back to `''` (relative URL) — no production env var needed
-- [x] `PORT` read from `process.env.PORT` (Railway sets this automatically)
-- [x] `railway.json` added with build + start commands
-- [x] `node_modules/` confirmed in `.gitignore`
-
-### Documentation
-- [ ] Update README with the live production URL once deployed
-- [X] Add a `LICENSE` file (e.g. MIT)
-- [ ] Add a screenshot or demo GIF to the README
+Web App Created by Geger John Paul Gabayeron and Model Created by Joseph Mikhaeli Jalandoni
