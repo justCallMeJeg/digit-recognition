@@ -1,7 +1,8 @@
 import { useRef, useEffect, useCallback } from 'react';
 
-const DISPLAY_SIZE = 392; // 28 * 14 — crisp grid alignment
+const DISPLAY_SIZE = 112; // 4 × MODEL_SIZE (28) — clean 4:1 ratio
 const MODEL_SIZE = 28;
+const BLUR_PX = 1; // soft edge to match MNIST stroke style
 
 interface DrawingCanvasProps {
   brush: number;
@@ -36,6 +37,7 @@ export function DrawingCanvas({ brush, isDrawing, setIsDrawing, onChange, clearK
     ctx.scale(dpr, dpr);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+    ctx.filter = `blur(${BLUR_PX}px)`;
     resetCanvas();
   }, [resetCanvas]);
 
@@ -48,33 +50,35 @@ export function DrawingCanvas({ brush, isDrawing, setIsDrawing, onChange, clearK
     return { x: (e.clientX - r.left) * sx, y: (e.clientY - r.top) * sy };
   };
 
+  const draw = (ctx: CanvasRenderingContext2D, from: { x: number; y: number }, to: { x: number; y: number }) => {
+    const w = (brush / MODEL_SIZE) * DISPLAY_SIZE;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = w;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.filter = `blur(${BLUR_PX}px)`;
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+    ctx.stroke();
+  };
+
   const handlePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
     (e.currentTarget as HTMLCanvasElement).setPointerCapture(e.pointerId);
     setIsDrawing(true);
     const p = localPoint(e);
     lastRef.current = p;
-    const ctx = canvasRef.current!.getContext('2d')!;
-    const r = (brush / MODEL_SIZE) * DISPLAY_SIZE * 0.5;
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-    ctx.fill();
+    // draw a dot by stroking a zero-length line (round caps produce a circle)
+    draw(canvasRef.current!.getContext('2d')!, p, p);
     hasInkRef.current = true;
     onChange?.({ hasInk: true });
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDrawing) return;
-    const ctx = canvasRef.current!.getContext('2d')!;
     const p = localPoint(e);
-    const last = lastRef.current ?? p;
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = (brush / MODEL_SIZE) * DISPLAY_SIZE;
-    ctx.beginPath();
-    ctx.moveTo(last.x, last.y);
-    ctx.lineTo(p.x, p.y);
-    ctx.stroke();
+    draw(canvasRef.current!.getContext('2d')!, lastRef.current ?? p, p);
     lastRef.current = p;
   };
 
@@ -93,6 +97,7 @@ export function DrawingCanvas({ brush, isDrawing, setIsDrawing, onChange, clearK
         onPointerLeave={handlePointerUp}
         onPointerCancel={handlePointerUp}
         className="block w-full h-full rounded-xl bg-black touch-none cursor-crosshair"
+        style={{ imageRendering: 'pixelated' }}
       />
       <div className="absolute inset-0 rounded-xl canvas-grid pointer-events-none" />
     </div>
