@@ -12,6 +12,10 @@ const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 const isProd = process.env.NODE_ENV === 'production';
 
+// Trust the first proxy hop (Railway, Render, etc.) so rate-limiter
+// reads the real client IP from X-Forwarded-For instead of the proxy IP
+app.set('trust proxy', 1);
+
 // CORS — open in dev, locked to ALLOWED_ORIGIN in production
 const allowedOrigin = process.env.ALLOWED_ORIGIN;
 app.use(cors(
