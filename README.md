@@ -204,5 +204,5 @@ python convert_model.py
 
 ### Documentation
 - [ ] Update README with the live production URL once deployed
-- [ ] Add a `LICENSE` file (e.g. MIT)
+- [X] Add a `LICENSE` file (e.g. MIT)
 - [ ] Add a screenshot or demo GIF to the README
