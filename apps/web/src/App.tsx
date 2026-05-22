@@ -21,7 +21,7 @@ export default function App() {
   const [result, setResult] = useState<PredictionResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [revealed, setRevealed] = useState(false);
-  const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const canvasContainerRef = useRef<HTMLDivElement | null>(null);
 
   const onCanvasChange = useCallback(({ hasInk }: { hasInk: boolean }) => setHasInk(hasInk), []);
 
@@ -80,11 +80,7 @@ export default function App() {
       <header className="border-b border-border bg-white/70 backdrop-blur-sm shrink-0">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <img
-              src="/favicon.png"
-              alt="Digit Recognizer"
-              className="w-7 h-7 rounded-md object-contain"
-            />
+            <img src="/favicon.png" alt="Digit Recognizer" className="w-7 h-7 rounded-md object-contain" />
             <div className="flex flex-col leading-tight">
               <span className="text-sm font-semibold">Digit Recognizer</span>
               <span className="hidden sm:block text-[11px] text-muted-foreground">MNIST · Dense inference</span>
@@ -135,31 +131,70 @@ export default function App() {
           </div>
         </div>
 
-        {/* Desktop: animated two-panel grid */}
-        <div
-          className={cn(
-            'hidden lg:grid flex-1 min-h-0 gap-6',
-            'transition-[grid-template-columns] duration-500 ease-out',
-            revealed
-              ? 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)]'
-              : 'grid-cols-[minmax(0,1fr)_0fr]',
-          )}
-        >
-          <CanvasCard
-            canvasContainerRef={canvasContainerRef}
-            brush={brush}
-            isDrawing={isDrawing}
-            setIsDrawing={setIsDrawing}
-            onCanvasChange={onCanvasChange}
-            clearKey={clearKey}
-            hasInk={hasInk}
-            busy={busy}
-            result={result}
-            onClear={handleClear}
-            onPredict={handlePredict}
-          />
+        {/* Two-panel layout — single canvas instance shared across breakpoints */}
+        <div className={cn(
+          'flex-1 min-h-0 flex flex-col gap-4 sm:gap-6',
+          'lg:grid lg:transition-[grid-template-columns] lg:duration-500 lg:ease-out',
+          revealed
+            ? 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]'
+            : 'lg:grid-cols-[minmax(0,1fr)_0fr]',
+        )}>
+
+          {/* Canvas card */}
+          <Card className="p-4 sm:p-5 flex flex-col gap-4 overflow-hidden border-border">
+            <CardContent className="p-0 flex flex-col gap-4 flex-1 min-h-0">
+              <div className="flex items-start justify-between shrink-0">
+                <div>
+                  <h2 className="text-sm font-semibold">Canvas</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">Drawing area · 28×28 model input</p>
+                </div>
+                <Badge variant="outline" className="font-mono text-xs">
+                  {hasInk ? 'ink detected' : 'empty'}
+                </Badge>
+              </div>
+
+              {/* canvas-area: responsive height on mobile, flex-fill on desktop */}
+              <div
+                ref={canvasContainerRef}
+                className="canvas-area flex items-center justify-center
+                           h-[min(72vw,360px)]
+                           lg:h-auto lg:flex-1 lg:min-h-0"
+              >
+                <div className="canvas-fit">
+                  <DrawingCanvas
+                    brush={brush}
+                    isDrawing={isDrawing}
+                    setIsDrawing={setIsDrawing}
+                    onChange={onCanvasChange}
+                    clearKey={clearKey}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-3 border-t border-border shrink-0">
+                <Button
+                  variant="outline"
+                  onClick={handleClear}
+                  disabled={!hasInk && !result && !busy}
+                  className="flex-1"
+                >
+                  <EraserIcon />
+                  Clear
+                </Button>
+                <Button
+                  onClick={handlePredict}
+                  disabled={!hasInk || busy}
+                  className="flex-1"
+                >
+                  {busy ? <><SpinnerIcon />Predicting…</> : <><SparkleIcon />Predict</>}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Desktop results — animated side panel */}
           <div className={cn(
-            'overflow-hidden transition-all duration-500 min-h-0',
+            'hidden lg:block overflow-hidden transition-all duration-500 min-h-0',
             revealed ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0 pointer-events-none',
           )}>
             {revealed && (
@@ -172,113 +207,19 @@ export default function App() {
           </div>
         </div>
 
-        {/* Mobile: single column stack */}
-        <div className="flex lg:hidden flex-col gap-4">
-          <CanvasCard
-            canvasContainerRef={canvasContainerRef}
-            brush={brush}
-            isDrawing={isDrawing}
-            setIsDrawing={setIsDrawing}
-            onCanvasChange={onCanvasChange}
-            clearKey={clearKey}
-            hasInk={hasInk}
-            busy={busy}
-            result={result}
-            onClear={handleClear}
-            onPredict={handlePredict}
-            mobile
-          />
-          {revealed && (
-            <Card className="p-4 sm:p-5 border-border animate-fade-in-up overflow-y-auto">
+        {/* Mobile results — stacked below canvas, outside the grid */}
+        {revealed && (
+          <div className="lg:hidden animate-fade-in-up">
+            <Card className="p-4 sm:p-5 border-border">
               <CardContent className="p-0">
                 <ResultsPanel result={result} busy={busy} />
               </CardContent>
             </Card>
-          )}
-        </div>
+          </div>
+        )}
 
       </main>
     </div>
-  );
-}
-
-/* ---------- Canvas card (shared between mobile and desktop) ---------- */
-
-interface CanvasCardProps {
-  canvasContainerRef: React.RefObject<HTMLDivElement | null>;
-  brush: number;
-  isDrawing: boolean;
-  setIsDrawing: (v: boolean) => void;
-  onCanvasChange: (s: { hasInk: boolean }) => void;
-  clearKey: number;
-  hasInk: boolean;
-  busy: boolean;
-  result: PredictionResult | null;
-  onClear: () => void;
-  onPredict: () => void;
-  mobile?: boolean;
-}
-
-function CanvasCard({
-  canvasContainerRef, brush, isDrawing, setIsDrawing,
-  onCanvasChange, clearKey, hasInk, busy, result, onClear, onPredict, mobile,
-}: CanvasCardProps) {
-  return (
-    <Card className={cn(
-      'p-4 sm:p-5 flex flex-col gap-4 overflow-hidden border-border',
-      mobile ? 'min-h-0' : 'min-h-0 h-full',
-    )}>
-      <CardContent className="p-0 flex flex-col gap-4 flex-1 min-h-0">
-        <div className="flex items-start justify-between shrink-0">
-          <div>
-            <h2 className="text-sm font-semibold">Canvas</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Drawing area · 28×28 model input</p>
-          </div>
-          <Badge variant="outline" className="font-mono text-xs">
-            {hasInk ? 'ink detected' : 'empty'}
-          </Badge>
-        </div>
-
-        <div
-          ref={canvasContainerRef}
-          className={cn(
-            'canvas-area flex items-center justify-center',
-            mobile
-              ? 'h-[min(72vw,360px)]'
-              : 'flex-1 min-h-0',
-          )}
-        >
-          <div className="canvas-fit">
-            <DrawingCanvas
-              brush={brush}
-              isDrawing={isDrawing}
-              setIsDrawing={setIsDrawing}
-              onChange={onCanvasChange}
-              clearKey={clearKey}
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 pt-3 border-t border-border shrink-0">
-          <Button
-            variant="outline"
-            onClick={onClear}
-            disabled={!hasInk && !result && !busy}
-            className="flex-1"
-          >
-            <EraserIcon />
-            Clear
-          </Button>
-          <Button
-            onClick={onPredict}
-            disabled={!hasInk || busy}
-            className="flex-1"
-          >
-            {busy ? <><SpinnerIcon />Predicting…</> : <><SparkleIcon />Predict</>}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 
