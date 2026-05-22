@@ -205,7 +205,7 @@ export default function App() {
 /* ---------- Canvas card (shared between mobile and desktop) ---------- */
 
 interface CanvasCardProps {
-  canvasContainerRef: React.RefObject<HTMLDivElement>;
+  canvasContainerRef: React.RefObject<HTMLDivElement | null>;
   brush: number;
   isDrawing: boolean;
   setIsDrawing: (v: boolean) => void;
