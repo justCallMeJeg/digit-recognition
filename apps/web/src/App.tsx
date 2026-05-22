@@ -2,7 +2,8 @@ import { useState, useCallback, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { DrawingCanvas, readModelTensor } from '@/components/DrawingCanvas';
+import { DrawingCanvas } from '@/components/DrawingCanvas';
+import { readModelTensor } from '@/lib/tensor';
 import { ResultsPanel, type PredictionResult } from '@/components/ResultsPanel';
 import { cn } from '@/lib/utils';
 

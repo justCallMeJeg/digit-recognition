@@ -172,23 +172,23 @@ python convert_model.py
 ## Pre-Publish Checklist
 
 ### Security
-- [ ] `apps/web/.env` is **not** committed (confirmed in `.gitignore`)
-- [ ] No hardcoded secrets or credentials in source files
+- [X] `apps/web/.env` is **not** committed (confirmed in `.gitignore`)
+- [X] No hardcoded secrets or credentials in source files
 - [ ] Set `ALLOWED_ORIGIN` env var on Railway after first deploy to lock CORS
 - [x] Rate limiting added to `/predict/*` endpoints (`express-rate-limit`, 60 req/min)
 - [x] `console.log` gated behind `NODE_ENV !== 'production'`
 
 ### Code Quality
-- [ ] TypeScript compiles clean: `cd apps/web && npx tsc --noEmit`
-- [ ] No ESLint warnings: `cd apps/web && npx eslint src`
+- [X] TypeScript compiles clean: `cd apps/web && npx tsc --noEmit`
+- [X] No ESLint warnings: `cd apps/web && npx eslint src`
 - [X] Delete unused `apps/web/src/components/BrushSlider.tsx`
 - [X] Delete unused `apps/web/src/App.css` if empty
 
 ### Build & Runtime
-- [ ] Production build succeeds: `npm run build`
+- [X] Production build succeeds: `npm run build`
 - [x] `apps/web/dist/` added to `.gitignore`
-- [ ] `npm run prod` starts cleanly and `/health` returns `{ modelLoaded: true }`
-- [ ] Model files (`apps/backend/model/model.json`, `*.bin`) are committed
+- [X] `npm run prod` starts cleanly and `/health` returns `{ modelLoaded: true }`
+- [X] Model files (`apps/backend/model/model.json`, `*.bin`) are committed
 
 ### Frontend Polish
 - [x] Favicon set (`apps/web/public/favicon.png`)
