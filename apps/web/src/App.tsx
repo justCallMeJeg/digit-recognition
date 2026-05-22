@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,7 +43,15 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ data: Array.from(tensor.data) }),
       });
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        console.error(`Prediction failed — HTTP ${res.status}:`, body.error ?? res.statusText);
+        toast.error(res.status >= 500 ? 'Prediction failed' : 'Invalid request', {
+          description: res.status >= 500 ? 'The server encountered an error.' : 'The server rejected the input.',
+        });
+        setRevealed(false);
+        return;
+      }
       const json = await res.json();
       setResult({
         predictedClass: json.predictedClass,
@@ -51,7 +60,12 @@ export default function App() {
         tensor,
       });
     } catch (err) {
+      const isNetworkError = err instanceof TypeError;
       console.error('Prediction failed:', err);
+      toast.error(isNetworkError ? 'Could not reach the server' : 'Something went wrong', {
+        description: isNetworkError ? 'Check that the backend is running.' : 'An unexpected error occurred.',
+      });
+      setRevealed(false);
     } finally {
       setBusy(false);
     }
