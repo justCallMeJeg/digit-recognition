@@ -1,4 +1,5 @@
 const express = require('express');
+const { version } = require('./package.json');
 const tf = require('@tensorflow/tfjs');
 const cors = require('cors');
 const multer = require('multer');
@@ -133,7 +134,7 @@ app.post('/predict/raw', predictLimiter, async (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', modelLoaded: !!model });
+  res.json({ status: 'ok', modelLoaded: !!model, version });
 });
 
 // Serve built frontend in production

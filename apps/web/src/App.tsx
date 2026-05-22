@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
+import { useHealth } from '@/hooks/useHealth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +13,7 @@ const API_URL = import.meta.env.VITE_API_URL ?? '';
 const BRUSH_SIZE = 2;
 
 export default function App() {
+  const health = useHealth();
   const [brush] = useState(BRUSH_SIZE);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasInk, setHasInk] = useState(false);
@@ -87,10 +89,19 @@ export default function App() {
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              model online
+              <span className={cn(
+                'w-1.5 h-1.5 rounded-full',
+                health.status === 'loading' && 'bg-muted-foreground/50 animate-pulse',
+                health.status === 'online'  && 'bg-emerald-500',
+                health.status === 'offline' && 'bg-red-500',
+              )} />
+              {health.status === 'loading' && 'checking…'}
+              {health.status === 'online'  && 'model online'}
+              {health.status === 'offline' && 'model offline'}
             </Badge>
-            <Badge variant="outline" className="font-mono">v1.0.0</Badge>
+            <Badge variant="outline" className="font-mono">
+              {health.version ? `v${health.version}` : '—'}
+            </Badge>
           </div>
         </div>
       </header>
