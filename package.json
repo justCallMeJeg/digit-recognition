@@ -16,5 +16,5 @@
     "cross-env": "^10.1.0",
     "turbo": "latest"
   },
-  "packageManager": "npm@11.0.0"
+  "engines": { "node": ">=18" }
 }
