@@ -1,317 +1,208 @@
-# 🚀 Keras Model Web App - Setup Guide
+# Digit Recognizer
 
-Complete guide to deploy your Keras digit recognition model with Express.js backend and React frontend.
-
-## 📋 Prerequisites
-
-- Node.js (v16 or higher)
-- npm or yarn
-- Python 3 (for model conversion)
+A full-stack handwritten digit recognition app built on a Keras MNIST model. Draw a digit in the browser and the model classifies it in real time, returning a ranked probability list for all 10 classes.
 
 ---
 
-## 🏗️ Project Structure
+## Features
+
+- **Draw-to-predict** — freehand canvas with auto-centering and bounding-box preprocessing before inference
+- **Ranked results** — all 10 digit classes sorted by probability with animated bars
+- **28×28 preview** — shows the exact tensor sent to the model
+- **Fast inference** — dense neural network runs in milliseconds via TensorFlow.js on Node.js
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, TypeScript, Vite, TailwindCSS v4, shadcn/ui |
+| Backend | Node.js, Express, TensorFlow.js |
+| Model | Keras Sequential (Dense 784→128→64→10) trained on MNIST |
+| Monorepo | Turborepo, npm workspaces |
+
+---
+
+## Project Structure
 
 ```
-keras-model-app/
-├── server.js              # Express backend
-├── package.json           # Backend dependencies
-├── model/                 # Converted TensorFlow.js model
-│   ├── model.json
-│   └── group1-shard1of1.bin
-└── client/                # React frontend
-    ├── src/
-    │   ├── App.js
-    │   └── App.css
-    └── package.json
+digit-recognition/
+├── apps/
+│   ├── backend/          # Express API + TensorFlow.js inference
+│   │   ├── model/        # Converted TF.js model weights
+│   │   └── server.js
+│   └── web/              # React + Vite frontend
+│       └── src/
+│           ├── components/
+│           └── App.tsx
+├── scripts/
+│   ├── convert_model.py  # Keras → TF.js weight converter
+│   └── test_setup.py     # Verify model files and backend setup
+├── model.keras           # Original Keras model
+└── turbo.json
 ```
 
 ---
 
-## 🔧 Setup Instructions
+## Prerequisites
 
-### Step 1: Convert Your Keras Model
+- **Node.js** v18 or higher
+- **npm** v9 or higher
+- **Python 3.9+** with `tensorflow` and `numpy` *(only needed to re-convert the model)*
 
-First, convert your `.keras` file to TensorFlow.js format:
+---
 
-```bash
-# Run the conversion script
-python3 convert_model.py
-```
+## Getting Started
 
-This creates:
-- `model/model.json` - Model architecture
-- `model/group1-shard1of1.bin` - Model weights
-
-### Step 2: Backend Setup
+### 1. Install dependencies
 
 ```bash
-# Install backend dependencies
 npm install
+```
 
-# Start the server
-npm start
+### 2. Configure environment
 
-# Or for development with auto-reload
+```bash
+# apps/web/.env  (already included — change if your backend runs on a different port)
+VITE_API_URL=http://localhost:5000
+```
+
+### 3. Run in development
+
+```bash
 npm run dev
 ```
 
-The server will start on **http://localhost:5000**
+Starts both servers concurrently via Turbo:
 
-**API Endpoints:**
-- `POST /predict/raw` - For canvas drawings (expects 784 float array)
-- `POST /predict/image` - For image uploads
-- `GET /health` - Health check
+| Service | URL |
+|---|---|
+| Frontend (Vite) | http://localhost:5173 |
+| Backend (Express) | http://localhost:5000 |
 
-### Step 3: Frontend Setup
-
-```bash
-# Navigate to client directory
-cd client
-
-# Install dependencies
-npm install
-
-# Start React dev server
-npm start
-```
-
-The app will open at **http://localhost:3000**
-
----
-
-## 🎯 How to Use the App
-
-### Drawing Mode
-1. Draw a digit (0-9) on the canvas using your mouse
-2. Click "🔮 Predict" to get the model's prediction
-3. View the predicted digit and confidence scores
-4. Click "🗑️ Clear" to start over
-
-### Upload Mode
-1. Click "📁 Upload" to select an image file
-2. The model will automatically predict
-3. The uploaded image will be displayed on the canvas
-
----
-
-## 📦 Deployment
-
-### Local Deployment
-
-Already done! Just run both servers:
-```bash
-# Terminal 1 - Backend
-npm start
-
-# Terminal 2 - Frontend
-cd client && npm start
-```
-
-### Cloud Deployment Options
-
-#### Option 1: Heroku (Backend + Frontend)
-
-**Backend:**
-```bash
-# Add Procfile
-echo "web: node server.js" > Procfile
-
-# Deploy
-heroku create your-app-name
-git push heroku main
-```
-
-**Frontend:**
-Update API URL in `client/src/App.js`:
-```javascript
-const API_URL = 'https://your-app-name.herokuapp.com';
-```
-
-#### Option 2: Vercel (Frontend) + Render (Backend)
-
-**Backend on Render:**
-1. Create account at render.com
-2. Create new Web Service
-3. Connect your GitHub repo
-4. Build command: `npm install`
-5. Start command: `node server.js`
-
-**Frontend on Vercel:**
-1. Create account at vercel.com
-2. Import your project
-3. Set environment variable:
-   - `REACT_APP_API_URL=https://your-backend.onrender.com`
-4. Update fetch URLs to use `process.env.REACT_APP_API_URL`
-
-#### Option 3: AWS (EC2)
+### 4. Production build (local test)
 
 ```bash
-# SSH into EC2 instance
-ssh -i your-key.pem ubuntu@your-ip
-
-# Install Node.js
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# Clone your repo
-git clone your-repo-url
-cd your-repo
-
-# Backend
-npm install
-npm install -g pm2
-pm2 start server.js
-pm2 save
-
-# Frontend (build for production)
-cd client
-npm install
-npm run build
-sudo npm install -g serve
-serve -s build -p 80
+npm run build   # compiles frontend to apps/web/dist/
+npm run prod    # Express serves API + static frontend on port 5000
 ```
 
-#### Option 4: Docker
+---
 
-```dockerfile
-# Dockerfile for backend
-FROM node:18
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-EXPOSE 5000
-CMD ["node", "server.js"]
+## Deploying to Railway
+
+Railway hosts the backend and frontend as a single Node.js service. The `railway.json` config at the repo root handles the build and start commands automatically.
+
+### Steps
+
+1. Push the repo to GitHub (ensure `apps/web/dist/` and `node_modules/` are not committed)
+2. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo**
+3. Select this repository
+4. In the Railway dashboard under **Variables**, add:
+
+   | Variable | Value |
+   |---|---|
+   | `NODE_ENV` | `production` |
+   | `ALLOWED_ORIGIN` | your Railway public URL (e.g. `https://digit-recognizer.up.railway.app`) — set this after first deploy |
+
+5. Railway will run `npm install && npm run build` then start the server
+6. Once deployed, copy the public URL and set it as `ALLOWED_ORIGIN` to lock CORS
+
+> **`VITE_API_URL` is not needed in production** — the frontend is served from the same Express server, so API calls use relative paths automatically.
+
+---
+
+## API Reference
+
+### `GET /health`
+
+Returns model load status.
+
+```json
+{ "status": "ok", "modelLoaded": true }
 ```
+
+### `POST /predict/raw`
+
+Accepts a flat array of 784 normalized float values (grayscale pixels, 0.0–1.0, black background).
+
+**Request**
+```json
+{ "data": [0.0, 0.0, 0.95, ...] }
+```
+
+**Response**
+```json
+{
+  "predictedClass": 7,
+  "confidence": 0.982,
+  "probabilities": [0.001, 0.003, 0.002, 0.001, 0.002, 0.001, 0.001, 0.982, 0.004, 0.003]
+}
+```
+
+### `POST /predict/image`
+
+Accepts a multipart form upload (`image` field). The backend resizes and normalizes the image automatically.
+
+---
+
+## Model Architecture
+
+```
+Input  →  Dense(128, relu)  →  Dense(64, relu)  →  Dense(10, softmax)
+ 784            128                  64                    10
+```
+
+Trained on the MNIST dataset (60,000 training / 10,000 test images).
+
+### Re-converting the model
+
+If you update `model.keras`, regenerate the TF.js weights:
 
 ```bash
-# Build and run
-docker build -t keras-model-backend .
-docker run -p 5000:5000 keras-model-backend
+cd scripts
+pip install tensorflow numpy
+python convert_model.py
+# outputs to apps/backend/model/
 ```
 
 ---
 
-## 🔍 Testing the API
+## Pre-Publish Checklist
 
-### Using cURL
+### Security
+- [X] `apps/web/.env` is **not** committed (confirmed in `.gitignore`)
+- [X] No hardcoded secrets or credentials in source files
+- [ ] Set `ALLOWED_ORIGIN` env var on Railway after first deploy to lock CORS
+- [x] Rate limiting added to `/predict/*` endpoints (`express-rate-limit`, 60 req/min)
+- [x] `console.log` gated behind `NODE_ENV !== 'production'`
 
-**Test raw prediction:**
-```bash
-curl -X POST http://localhost:5000/predict/raw \
-  -H "Content-Type: application/json" \
-  -d '{"data": [0.0, 0.0, ..., 0.5, 0.8, ...]}'
-```
+### Code Quality
+- [X] TypeScript compiles clean: `cd apps/web && npx tsc --noEmit`
+- [X] No ESLint warnings: `cd apps/web && npx eslint src`
+- [X] Delete unused `apps/web/src/components/BrushSlider.tsx`
+- [X] Delete unused `apps/web/src/App.css` if empty
 
-**Test image upload:**
-```bash
-curl -X POST http://localhost:5000/predict/image \
-  -F "image=@digit.png"
-```
+### Build & Runtime
+- [X] Production build succeeds: `npm run build`
+- [x] `apps/web/dist/` added to `.gitignore`
+- [X] `npm run prod` starts cleanly and `/health` returns `{ modelLoaded: true }`
+- [X] Model files (`apps/backend/model/model.json`, `*.bin`) are committed
 
-**Health check:**
-```bash
-curl http://localhost:5000/health
-```
+### Frontend Polish
+- [x] Favicon set (`apps/web/public/favicon.png`)
+- [x] Page `<title>` set to `"Digit Recognizer"`
+- [ ] Test on a mobile/touch device — pointer events and canvas sizing
+- [ ] Test on Firefox and Safari in addition to Chrome
 
----
+### Deployment
+- [x] `VITE_API_URL` falls back to `''` (relative URL) — no production env var needed
+- [x] `PORT` read from `process.env.PORT` (Railway sets this automatically)
+- [x] `railway.json` added with build + start commands
+- [x] `node_modules/` confirmed in `.gitignore`
 
-## 🐛 Troubleshooting
-
-### Model not loading
-- Ensure `model/model.json` exists
-- Check file path in `server.js`
-- Verify model conversion completed successfully
-
-### CORS errors
-- Ensure `cors` is installed and enabled
-- Check frontend is making requests to correct URL
-
-### Prediction errors
-- Verify input data is exactly 784 values
-- Check normalization (values should be 0-1)
-- Ensure data type is Float32Array or regular array
-
-### Canvas not working
-- Check browser console for errors
-- Verify React app is running on port 3000
-- Test in different browser
-
----
-
-## 📊 Model Details
-
-- **Input:** 784 features (28×28 grayscale image, flattened)
-- **Output:** 10 classes (digits 0-9)
-- **Architecture:** 
-  - Dense(128) → Dense(64) → Dense(10)
-- **Total Parameters:** 328,160
-- **Model Size:** ~1.25 MB
-
----
-
-## 🎨 Customization
-
-### Change Canvas Size
-In `client/src/App.js`:
-```javascript
-<canvas
-  width={400}  // Change from 280
-  height={400} // Change from 280
-/>
-```
-
-### Modify Styling
-Edit `client/src/App.css` for custom colors, layout, etc.
-
-### Add More Features
-- Image preprocessing options
-- Batch prediction
-- Model performance metrics
-- Download prediction results
-
----
-
-## 📚 Tech Stack
-
-- **Backend:** Express.js, TensorFlow.js Node, Multer, Sharp
-- **Frontend:** React, HTML5 Canvas
-- **Model:** Keras/TensorFlow (converted to TF.js)
-
----
-
-## 🤝 Next Steps
-
-1. ✅ Test locally
-2. ✅ Deploy to cloud
-3. Add authentication (if needed)
-4. Implement rate limiting
-5. Add analytics/logging
-6. Create API documentation
-7. Add unit tests
-
----
-
-## 📝 Notes
-
-- This is a demo application - not production-ready
-- Consider adding input validation
-- Implement proper error handling for production
-- Add monitoring and logging
-- Consider model versioning
-
----
-
-## 🆘 Need Help?
-
-Common issues and solutions:
-
-1. **Port already in use:** Change port in `server.js` and update frontend URL
-2. **Module not found:** Run `npm install` again
-3. **Model prediction wrong:** Check input preprocessing matches training data
-4. **Slow predictions:** Consider using GPU-enabled TensorFlow.js for better performance
-
----
-
-Happy coding! 🎉
+### Documentation
+- [ ] Update README with the live production URL once deployed
+- [X] Add a `LICENSE` file (e.g. MIT)
+- [ ] Add a screenshot or demo GIF to the README

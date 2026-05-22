@@ -2,14 +2,18 @@
   "name": "digit-recognition",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["apps/*"],
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
-    "dev":   "turbo run dev",
+    "dev": "turbo run dev",
     "build": "turbo run build",
     "start": "turbo run start",
-    "test":  "turbo run test"
+    "test": "turbo run test",
+    "prod": "cross-env NODE_ENV=production node apps/backend/server.js"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "turbo": "latest"
   },
   "packageManager": "npm@11.0.0"

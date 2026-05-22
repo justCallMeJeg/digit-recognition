@@ -1,22 +1,40 @@
 const express = require('express');
+const { version } = require('./package.json');
 const tf = require('@tensorflow/tfjs');
 const cors = require('cors');
 const multer = require('multer');
 const sharp = require('sharp');
+const rateLimit = require('express-rate-limit');
 const fs = require('fs');
 const path = require('path');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
+const isProd = process.env.NODE_ENV === 'production';
 
-app.use(cors());
+// CORS — open in dev, locked to ALLOWED_ORIGIN in production
+const allowedOrigin = process.env.ALLOWED_ORIGIN;
+app.use(cors(
+  isProd && allowedOrigin
+    ? { origin: allowedOrigin }
+    : undefined
+));
+
 app.use(express.json({ limit: '10mb' }));
+
+// Rate limit prediction endpoints — 60 requests per minute per IP
+const predictLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please slow down.' },
+});
 
 let model;
 
 async function loadModel() {
   try {
-    // Build the architecture directly — avoids Keras 3 topology format issues
     model = tf.sequential({
       layers: [
         tf.layers.dense({ inputShape: [784], units: 128, activation: 'relu' }),
@@ -25,10 +43,10 @@ async function loadModel() {
       ]
     });
 
-    // Load weights from binary file using specs from model.json
-    const modelJson = JSON.parse(fs.readFileSync('./model/model.json', 'utf8'));
+    const modelDir = path.join(__dirname, 'model');
+    const modelJson = JSON.parse(fs.readFileSync(path.join(modelDir, 'model.json'), 'utf8'));
     const weightSpecs = modelJson.weightsManifest[0].weights;
-    const weightsBuf = fs.readFileSync('./model/group1-shard1of1.bin');
+    const weightsBuf = fs.readFileSync(path.join(modelDir, 'group1-shard1of1.bin'));
     const weightData = weightsBuf.buffer.slice(
       weightsBuf.byteOffset,
       weightsBuf.byteOffset + weightsBuf.byteLength
@@ -37,35 +55,32 @@ async function loadModel() {
     const decoded = tf.io.decodeWeights(weightData, weightSpecs);
     model.setWeights(weightSpecs.map(spec => decoded[spec.name]));
 
-    console.log('Model loaded successfully');
-    console.log('Input shape:', model.inputs[0].shape);
-    console.log('Output shape:', model.outputs[0].shape);
+    if (!isProd) {
+      console.log('Model loaded successfully');
+      console.log('Input shape:', model.inputs[0].shape);
+      console.log('Output shape:', model.outputs[0].shape);
+    }
   } catch (error) {
     console.error('Failed to load model:', error);
     process.exit(1);
   }
 }
 
-// Preprocess image to match model input (784 = 28x28 flattened)
 async function preprocessImage(imageBuffer) {
-  // Convert image to 28x28 grayscale
   const processedImage = await sharp(imageBuffer)
     .resize(28, 28)
     .grayscale()
     .raw()
     .toBuffer();
 
-  // Normalize pixel values to [0, 1]
   const pixels = new Float32Array(784);
   for (let i = 0; i < 784; i++) {
     pixels[i] = processedImage[i] / 255.0;
   }
-
   return pixels;
 }
 
-// Prediction endpoint for image upload
-app.post('/predict/image', upload.single('image'), async (req, res) => {
+app.post('/predict/image', predictLimiter, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image uploaded' });
@@ -73,35 +88,30 @@ app.post('/predict/image', upload.single('image'), async (req, res) => {
 
     const pixels = await preprocessImage(req.file.buffer);
     const inputTensor = tf.tensor2d([pixels], [1, 784]);
-    
     const prediction = model.predict(inputTensor);
     const probabilities = await prediction.data();
     const predictedClass = prediction.argMax(-1).dataSync()[0];
 
-    // Clean up tensors
     inputTensor.dispose();
     prediction.dispose();
 
     res.json({
       predictedClass,
       probabilities: Array.from(probabilities),
-      confidence: probabilities[predictedClass]
+      confidence: probabilities[predictedClass],
     });
   } catch (error) {
     console.error('Prediction error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Prediction failed' });
   }
 });
 
-// Prediction endpoint for canvas/raw data
-app.post('/predict/raw', async (req, res) => {
+app.post('/predict/raw', predictLimiter, async (req, res) => {
   try {
     const { data } = req.body;
-    
+
     if (!data || data.length !== 784) {
-      return res.status(400).json({ 
-        error: 'Invalid input: expected 784 values' 
-      });
+      return res.status(400).json({ error: 'Invalid input: expected 784 values' });
     }
 
     const inputTensor = tf.tensor2d([data], [1, 784]);
@@ -115,26 +125,32 @@ app.post('/predict/raw', async (req, res) => {
     res.json({
       predictedClass,
       probabilities: Array.from(probabilities),
-      confidence: probabilities[predictedClass]
+      confidence: probabilities[predictedClass],
     });
   } catch (error) {
     console.error('Prediction error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Prediction failed' });
   }
 });
 
-// Health check
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    modelLoaded: !!model 
-  });
+  res.json({ status: 'ok', modelLoaded: !!model, version });
 });
+
+// Serve built frontend in production
+if (isProd) {
+  const distPath = path.join(__dirname, '../web/dist');
+  app.use(express.static(distPath));
+  // SPA fallback — any unmatched route returns index.html
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 const PORT = process.env.PORT || 5000;
 
 loadModel().then(() => {
   app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT} [${isProd ? 'production' : 'development'}]`);
   });
 });
