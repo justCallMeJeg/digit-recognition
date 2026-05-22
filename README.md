@@ -81,12 +81,35 @@ Starts both servers concurrently via Turbo:
 | Frontend (Vite) | http://localhost:5173 |
 | Backend (Express) | http://localhost:5000 |
 
-### 4. Production build
+### 4. Production build (local test)
 
 ```bash
-npm run build   # compiles frontend to apps/web/dist
-npm run start   # serves built frontend + backend
+npm run build   # compiles frontend to apps/web/dist/
+npm run prod    # Express serves API + static frontend on port 5000
 ```
+
+---
+
+## Deploying to Railway
+
+Railway hosts the backend and frontend as a single Node.js service. The `railway.json` config at the repo root handles the build and start commands automatically.
+
+### Steps
+
+1. Push the repo to GitHub (ensure `apps/web/dist/` and `node_modules/` are not committed)
+2. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo**
+3. Select this repository
+4. In the Railway dashboard under **Variables**, add:
+
+   | Variable | Value |
+   |---|---|
+   | `NODE_ENV` | `production` |
+   | `ALLOWED_ORIGIN` | your Railway public URL (e.g. `https://digit-recognizer.up.railway.app`) — set this after first deploy |
+
+5. Railway will run `npm install && npm run build` then start the server
+6. Once deployed, copy the public URL and set it as `ALLOWED_ORIGIN` to lock CORS
+
+> **`VITE_API_URL` is not needed in production** — the frontend is served from the same Express server, so API calls use relative paths automatically.
 
 ---
 
@@ -149,37 +172,37 @@ python convert_model.py
 ## Pre-Publish Checklist
 
 ### Security
-- [ ] `apps/web/.env` is listed in `.gitignore` — confirm it is **not** committed
-- [ ] No hardcoded secrets, API keys, or credentials in source files
-- [ ] Backend CORS origin locked to the production frontend URL (not `*`)
-- [ ] Add rate limiting to `/predict/*` endpoints (e.g. `express-rate-limit`)
-- [ ] Review all `console.log` / debug output and remove or gate behind `NODE_ENV`
+- [ ] `apps/web/.env` is **not** committed (confirmed in `.gitignore`)
+- [ ] No hardcoded secrets or credentials in source files
+- [ ] Set `ALLOWED_ORIGIN` env var on Railway after first deploy to lock CORS
+- [x] Rate limiting added to `/predict/*` endpoints (`express-rate-limit`, 60 req/min)
+- [x] `console.log` gated behind `NODE_ENV !== 'production'`
 
 ### Code Quality
-- [ ] TypeScript compiles with no errors: `cd apps/web && npx tsc --noEmit`
+- [ ] TypeScript compiles clean: `cd apps/web && npx tsc --noEmit`
 - [ ] No ESLint warnings: `cd apps/web && npx eslint src`
-- [ ] `BrushSlider.tsx` removed or cleaned up (currently unused)
-- [ ] `apps/web/src/App.css` removed if empty/unused
+- [ ] Delete unused `apps/web/src/components/BrushSlider.tsx`
+- [ ] Delete unused `apps/web/src/App.css` if empty
 
 ### Build & Runtime
 - [ ] Production build succeeds: `npm run build`
-- [ ] `apps/web/dist/` is in `.gitignore`
-- [ ] Backend starts cleanly and `/health` returns `{ modelLoaded: true }`
-- [ ] Model binary files (`model.json`, `*.bin`) are committed to the repo
+- [x] `apps/web/dist/` added to `.gitignore`
+- [ ] `npm run prod` starts cleanly and `/health` returns `{ modelLoaded: true }`
+- [ ] Model files (`apps/backend/model/model.json`, `*.bin`) are committed
 
 ### Frontend Polish
-- [ ] Favicon set (`apps/web/public/favicon.png`) and `<link>` in `index.html` updated
-- [ ] Page `<title>` in `index.html` updated (currently `"web"`)
+- [x] Favicon set (`apps/web/public/favicon.png`)
+- [x] Page `<title>` set to `"Digit Recognizer"`
 - [ ] Test on a mobile/touch device — pointer events and canvas sizing
 - [ ] Test on Firefox and Safari in addition to Chrome
 
 ### Deployment
-- [ ] `VITE_API_URL` set to the production backend URL (not `localhost`)
-- [ ] Backend `PORT` configurable via environment variable (it already reads `process.env.PORT`)
-- [ ] Add a `Procfile` or deployment config if hosting on Railway / Render / Fly.io
-- [ ] `node_modules/` confirmed in `.gitignore`
+- [x] `VITE_API_URL` falls back to `''` (relative URL) — no production env var needed
+- [x] `PORT` read from `process.env.PORT` (Railway sets this automatically)
+- [x] `railway.json` added with build + start commands
+- [x] `node_modules/` confirmed in `.gitignore`
 
 ### Documentation
-- [ ] README reflects the actual production URL once deployed
+- [ ] Update README with the live production URL once deployed
 - [ ] Add a `LICENSE` file (e.g. MIT)
 - [ ] Add a screenshot or demo GIF to the README

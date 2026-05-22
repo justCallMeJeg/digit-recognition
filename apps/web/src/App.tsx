@@ -6,7 +6,7 @@ import { DrawingCanvas, readModelTensor } from '@/components/DrawingCanvas';
 import { ResultsPanel, type PredictionResult } from '@/components/ResultsPanel';
 import { cn } from '@/lib/utils';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL ?? '';
 const BRUSH_SIZE = 2;
 
 export default function App() {
