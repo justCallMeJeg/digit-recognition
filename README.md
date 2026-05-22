@@ -181,8 +181,8 @@ python convert_model.py
 ### Code Quality
 - [ ] TypeScript compiles clean: `cd apps/web && npx tsc --noEmit`
 - [ ] No ESLint warnings: `cd apps/web && npx eslint src`
-- [ ] Delete unused `apps/web/src/components/BrushSlider.tsx`
-- [ ] Delete unused `apps/web/src/App.css` if empty
+- [X] Delete unused `apps/web/src/components/BrushSlider.tsx`
+- [X] Delete unused `apps/web/src/App.css` if empty
 
 ### Build & Runtime
 - [ ] Production build succeeds: `npm run build`
