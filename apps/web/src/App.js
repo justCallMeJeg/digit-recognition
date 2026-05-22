@@ -6,6 +6,7 @@ function App() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [brushSize, setBrushSize] = useState(15);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -35,7 +36,7 @@ function App() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    ctx.lineWidth = 15;
+    ctx.lineWidth = brushSize;
     ctx.lineCap = 'round';
     ctx.strokeStyle = 'black';
     ctx.lineTo(x, y);
@@ -153,6 +154,19 @@ function App() {
             onMouseLeave={stopDrawing}
           />
 
+          <div className="brush-control">
+            <label htmlFor="brushSize">Brush</label>
+            <input
+              id="brushSize"
+              type="range"
+              min="4"
+              max="40"
+              value={brushSize}
+              onChange={(e) => setBrushSize(Number(e.target.value))}
+            />
+            <span className="brush-size-value">{brushSize}px</span>
+          </div>
+
           <div className="controls">
             <button onClick={handlePredict} disabled={loading}>
               {loading ? 'Predicting...' : 'Predict'}
@@ -182,9 +196,11 @@ function App() {
 
             <div className="probabilities">
               <h3>All Probabilities:</h3>
-              {prediction.probabilities.map((prob, idx) => (
-                <div key={idx} className="prob-bar">
-                  <span className="digit-label">{idx}</span>
+              {[...prediction.probabilities.map((prob, idx) => ({ digit: idx, prob }))]
+                .sort((a, b) => b.prob - a.prob)
+                .map(({ digit, prob }) => (
+                <div key={digit} className="prob-bar">
+                  <span className="digit-label">{digit}</span>
                   <div className="bar-container">
                     <div
                       className="bar-fill"
