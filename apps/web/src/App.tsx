@@ -3,15 +3,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DrawingCanvas, readModelTensor } from '@/components/DrawingCanvas';
-import { BrushSlider } from '@/components/BrushSlider';
 import { ResultsPanel, type PredictionResult } from '@/components/ResultsPanel';
 import { cn } from '@/lib/utils';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
-const BRUSH_OPTIONS = [2, 4, 8, 16];
+const BRUSH_SIZE = 2;
 
 export default function App() {
-  const [brush, setBrush] = useState(8);
+  const [brush] = useState(BRUSH_SIZE);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasInk, setHasInk] = useState(false);
   const [clearKey, setClearKey] = useState(0);
@@ -129,10 +128,6 @@ export default function App() {
                     clearKey={clearKey}
                   />
                 </div>
-              </div>
-
-              <div className="shrink-0">
-                <BrushSlider value={brush} onChange={setBrush} options={BRUSH_OPTIONS} />
               </div>
 
               <div className="flex items-center gap-2 pt-3 border-t border-border shrink-0">
