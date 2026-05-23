@@ -10,7 +10,7 @@ import { ResultsPanel, type PredictionResult } from '@/components/ResultsPanel';
 import { cn } from '@/lib/utils';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
-const BRUSH_SIZE = 3;
+const BRUSH_SIZE = 2.575;
 
 export default function App() {
   const health = useHealth();

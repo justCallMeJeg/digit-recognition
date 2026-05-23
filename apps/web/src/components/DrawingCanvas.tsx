@@ -2,7 +2,7 @@ import { useRef, useEffect, useCallback } from 'react';
 
 const DISPLAY_SIZE = 112; // 4 × MODEL_SIZE (28) — clean 4:1 ratio
 const MODEL_SIZE = 28;
-const BLUR_PX = 1; // soft edge to match MNIST stroke style
+const BLUR_PX = 0.575; // soft edge to match MNIST stroke style
 
 interface DrawingCanvasProps {
   brush: number;
