@@ -13,8 +13,8 @@ def test_model_files():
     print("🔍 Checking model files...")
     
     files_to_check = [
-        './model/model.json',
-        './model/group1-shard1of1.bin'
+        './../apps/backend/model/model.json',
+        './../apps/backend/model/group1-shard1of1.bin'
     ]
     
     all_exist = True
@@ -33,7 +33,7 @@ def test_model_structure():
     print("\n🔍 Checking model.json structure...")
     
     try:
-        with open('./model/model.json', 'r') as f:
+        with open('./../apps/backend/model/model.json', 'r') as f:
             model_data = json.load(f)
         
         print(f"  ✓ Format: {model_data.get('format')}")
@@ -54,8 +54,8 @@ def test_backend_dependencies():
     
     print("\n🔍 Checking backend configuration...")
     
-    if os.path.exists('./package.json'):
-        with open('./package.json', 'r') as f:
+    if os.path.exists('./../package.json'):
+        with open('./../package.json', 'r') as f:
             pkg = json.load(f)
         
         deps = pkg.get('dependencies', {})

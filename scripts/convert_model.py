@@ -77,7 +77,7 @@ def convert_keras_to_tfjs(keras_path, output_dir):
     return output_dir
 
 if __name__ == "__main__":
-    keras_model_path = "./model.keras"
-    output_directory = "./model"
+    keras_model_path = "./../model.keras"
+    output_directory = "./../apps/backend/model"
     
     convert_keras_to_tfjs(keras_model_path, output_directory)
