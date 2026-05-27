@@ -9,7 +9,7 @@
       "module": "keras",
       "class_name": "Sequential",
       "config": {
-        "name": "sequential_3",
+        "name": "sequential",
         "trainable": true,
         "dtype": {
           "module": "keras",
@@ -31,7 +31,7 @@
               "dtype": "float32",
               "sparse": false,
               "ragged": false,
-              "name": "input_layer_3",
+              "name": "input_layer",
               "optional": false
             },
             "registered_name": null
@@ -40,7 +40,7 @@
             "module": "keras.layers",
             "class_name": "Dense",
             "config": {
-              "name": "dense_9",
+              "name": "dense",
               "trainable": true,
               "dtype": {
                 "module": "keras",
@@ -85,7 +85,7 @@
             "module": "keras.layers",
             "class_name": "Dense",
             "config": {
-              "name": "dense_10",
+              "name": "dense_1",
               "trainable": true,
               "dtype": {
                 "module": "keras",
@@ -130,7 +130,7 @@
             "module": "keras.layers",
             "class_name": "Dense",
             "config": {
-              "name": "dense_11",
+              "name": "dense_2",
               "trainable": true,
               "dtype": {
                 "module": "keras",
@@ -227,7 +227,7 @@
       ],
       "weights": [
         {
-          "name": "dense_9/kernel:0",
+          "name": "dense/kernel:0",
           "shape": [
             784,
             128
@@ -235,14 +235,14 @@
           "dtype": "float32"
         },
         {
-          "name": "dense_9/bias:0",
+          "name": "dense/bias:0",
           "shape": [
             128
           ],
           "dtype": "float32"
         },
         {
-          "name": "dense_10/kernel:0",
+          "name": "dense_1/kernel:0",
           "shape": [
             128,
             64
@@ -250,14 +250,14 @@
           "dtype": "float32"
         },
         {
-          "name": "dense_10/bias:0",
+          "name": "dense_1/bias:0",
           "shape": [
             64
           ],
           "dtype": "float32"
         },
         {
-          "name": "dense_11/kernel:0",
+          "name": "dense_2/kernel:0",
           "shape": [
             64,
             10
@@ -265,7 +265,7 @@
           "dtype": "float32"
         },
         {
-          "name": "dense_11/bias:0",
+          "name": "dense_2/bias:0",
           "shape": [
             10
           ],
